@@ -1,0 +1,7 @@
+/*
+ * Entry CSS tunggal yang di-import dari main.tsx.
+ * Seluruh design token (warna, tipografi, radius, shadow, glassmorphism,
+ * animasi) didefinisikan di ./styles/globals.css sesuai struktur folder
+ * Final Architecture Specification bagian 2.
+ */
+@import './styles/globals.css';
