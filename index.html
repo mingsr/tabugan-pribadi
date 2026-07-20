@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nabung Untuk Masa Depan</title>
+<meta name="description" content="Kelola pemasukan, pengeluaran, dan target tabunganmu dengan cara yang menyenangkan.">
+<meta name="theme-color" content="#0B1220">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Skip link for accessibility -->
+<a href="#main-content" class="skip-link">Langsung ke konten</a>
+
+<div class="app-shell">
+
+  <!-- ================= SIDEBAR (desktop) ================= -->
+  <aside class="sidebar" aria-label="Navigasi utama">
+    <div class="sidebar-brand">
+      <span class="brand-mark" aria-hidden="true">
+        <i class="fa-solid fa-piggy-bank"></i>
+      </span>
+      <span class="brand-text">Nabung<br><strong>Masa Depan</strong></span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="sidebar-link is-active" data-page="dashboard">
+        <i class="fa-solid fa-house"></i><span>Dashboard</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="transaksi">
+        <i class="fa-solid fa-receipt"></i><span>Transaksi</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="target">
+        <i class="fa-solid fa-bullseye"></i><span>Target</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="statistik">
+        <i class="fa-solid fa-chart-simple"></i><span>Statistik</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="achievement">
+        <i class="fa-solid fa-trophy"></i><span>Achievement</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="pengaturan">
+        <i class="fa-solid fa-gear"></i><span>Pengaturan</span>
+      </a>
+    </nav>
+
+    <button class="theme-toggle" id="themeToggleDesktop" type="button" aria-pressed="false" aria-label="Ganti mode gelap/terang">
+      <i class="fa-solid fa-moon"></i>
+      <span>Mode Gelap</span>
+      <span class="theme-toggle-track"><span class="theme-toggle-dot"></span></span>
+    </button>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main-column">
+
+    <!-- ---- Top Navbar ---- -->
+    <header class="navbar">
+      <button class="navbar-menu-btn" id="menuBtn" type="button" aria-label="Buka menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <div class="navbar-greeting">
+        <p class="greeting-label" id="greetingLabel">Selamat siang,</p>
+        <h1 class="greeting-name" id="greetingName">Rudolf 👋</h1>
+      </div>
+
+      <div class="navbar-actions">
+        <button class="conn-indicator" id="connIndicator" type="button" title="Status koneksi backend">
+          <span class="conn-indicator-dot" id="connIndicatorDot"></span>
+          <span class="conn-indicator-label" id="connIndicatorLabel">Offline</span>
+        </button>
+        <button class="icon-btn theme-toggle-mobile" id="themeToggleMobile" type="button" aria-label="Ganti mode gelap/terang">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="icon-btn" type="button" aria-label="Notifikasi">
+          <i class="fa-regular fa-bell"></i>
+          <span class="icon-btn-dot"></span>
+        </button>
+        <div class="level-chip" title="Level saat ini">
+          <span class="level-chip-icon">⚡</span>
+          <span id="navLevelText">Lv 1</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content">
+     <div class="page content dashboard-grid" id="page-dashboard">
+
+      <!-- ---- Welcome Banner (kondisi aplikasi baru) ---- -->
+      <section class="welcome-banner" id="dashboardWelcome" aria-label="Selamat datang" hidden>
+        <div class="welcome-banner-icon" aria-hidden="true">👋</div>
+        <h2 class="welcome-banner-title">Selamat datang, Rudolf!</h2>
+        <p class="welcome-banner-text">Perjalanan menabungmu dimulai dari sini. Mulailah dengan mencatat transaksi pertamamu — pemasukan, pengeluaran, atau tabungan — supaya dashboard ini mulai terisi.</p>
+        <button class="btn-primary" id="welcomeAddTxBtn" type="button">
+          <i class="fa-solid fa-plus"></i> Tambah Transaksi Pertama
+        </button>
+      </section>
+
+      <!-- ---- Hero Balance Card ---- -->
+      <section class="hero-balance" aria-label="Ringkasan saldo">
+        <div class="hero-balance-top">
+          <span class="hero-balance-label">
+            <i class="fa-solid fa-wallet"></i> Total Saldo
+          </span>
+          <button class="hero-balance-eye" id="toggleBalanceVisibility" type="button" aria-label="Sembunyikan saldo">
+            <i class="fa-regular fa-eye"></i>
+          </button>
+        </div>
+        <p class="hero-balance-amount" id="totalBalance">Rp0</p>
+        <div class="hero-balance-sub">
+          <span class="trend" id="balanceTrend" hidden>
+            <i class="fa-solid fa-arrow-trend-up" id="balanceTrendIcon"></i> <span id="balanceTrendText"></span>
+          </span>
+        </div>
+
+        <div class="hero-balance-footer">
+          <div class="hero-mini">
+            <span class="hero-mini-label"><i class="fa-solid fa-arrow-down"></i> Pemasukan</span>
+            <span class="hero-mini-value income" id="totalIncome">Rp0</span>
+          </div>
+          <div class="hero-mini-divider" aria-hidden="true"></div>
+          <div class="hero-mini">
+            <span class="hero-mini-label"><i class="fa-solid fa-arrow-up"></i> Pengeluaran</span>
+            <span class="hero-mini-value expense" id="totalExpense">Rp0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- Quick Stat Cards ---- -->
+      <section class="stat-grid" aria-label="Ringkasan cepat">
+        <article class="stat-card stat-card--saving">
+          <div class="stat-card-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+          <p class="stat-card-label">Total Ditabung</p>
+          <p class="stat-card-value" id="statSavingValue">Rp0</p>
+          <p class="stat-card-foot">Belum ada target aktif</p>
+        </article>
+
+        <article class="stat-card stat-card--streak">
+          <div class="stat-card-icon"><i class="fa-solid fa-fire"></i></div>
+          <p class="stat-card-label">Streak Nabung</p>
+          <p class="stat-card-value" id="statStreakValue">0 Hari</p>
+          <p class="stat-card-foot">Mulai kebiasaan menabung hari ini</p>
+        </article>
+
+        <article class="stat-card stat-card--xp">
+          <div class="stat-card-icon"><i class="fa-solid fa-star"></i></div>
+          <p class="stat-card-label">Total XP</p>
+          <p class="stat-card-value" id="statXpValue">0 XP</p>
+          <p class="stat-card-foot">Buka achievement pertamamu</p>
+        </article>
+      </section>
+
+      <!-- ---- Signature: Target Progress (laptop fill) ---- -->
+      <section class="target-card" aria-label="Progress target tabungan">
+        <div class="target-card-head">
+          <div>
+            <p class="target-card-eyebrow">Target Aktif</p>
+            <h2 class="target-card-title" id="targetName">Belum ada target aktif</h2>
+          </div>
+          <span class="target-card-badge" id="targetPercentBadge" hidden>0%</span>
+        </div>
+
+        <div id="dashboardTargetBody" hidden>
+          <div class="target-visual" aria-hidden="true">
+            <svg class="laptop-fill" viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <clipPath id="laptopClip">
+                  <path d="M30 20 h160 a8 8 0 0 1 8 8 v70 h-176 v-70 a8 8 0 0 1 8-8 z" />
+                </clipPath>
+                <linearGradient id="fillGradient" x1="0" y1="1" x2="0" y2="0">
+                  <stop offset="0%" stop-color="var(--accent-mint)" />
+                  <stop offset="100%" stop-color="var(--accent-mint-light)" />
+                </linearGradient>
+              </defs>
+
+              <!-- laptop base -->
+              <path d="M14 104 h192 l10 18 a6 6 0 0 1 -6 8 h-200 a6 6 0 0 1 -6-8 z" fill="var(--laptop-base)" />
+              <!-- screen outline -->
+              <path d="M30 20 h160 a8 8 0 0 1 8 8 v70 h-176 v-70 a8 8 0 0 1 8-8 z" fill="var(--laptop-screen-bg)" stroke="var(--laptop-frame)" stroke-width="3"/>
+
+              <!-- liquid fill, height controlled by JS via transform -->
+              <g clip-path="url(#laptopClip)">
+                <rect id="fillRect" x="14" y="98" width="192" height="0" fill="url(#fillGradient)"/>
+                <path id="fillWave" d="M14 98 q24 -6 48 0 t48 0 t48 0 t48 0 v60 h-192 z" fill="url(#fillGradient)" opacity="0.9"/>
+              </g>
+
+              <text x="110" y="60" text-anchor="middle" class="laptop-percent-text" id="laptopPercentText">0%</text>
+            </svg>
+          </div>
+
+          <div class="target-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progress target">
+            <div class="target-progress-fill" id="targetProgressFill" style="width:0%"></div>
+          </div>
+
+          <div class="target-card-figures">
+            <div>
+              <p class="target-figure-label">Terkumpul</p>
+              <p class="target-figure-value" id="targetCollected">Rp0</p>
+            </div>
+            <div>
+              <p class="target-figure-label">Sisa</p>
+              <p class="target-figure-value" id="targetRemaining">Rp0</p>
+            </div>
+            <div>
+              <p class="target-figure-label">Estimasi Selesai</p>
+              <p class="target-figure-value" id="targetEstimate">-</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="target-card-empty" id="dashboardTargetEmpty">
+          <div class="target-card-empty-icon"><i class="fa-solid fa-bullseye"></i></div>
+          <p class="target-card-empty-text">Belum ada target tabungan. Buat target pertamamu supaya progressnya bisa dipantau di sini.</p>
+          <a href="#" class="btn-secondary target-card-empty-btn" data-page="target">
+            <i class="fa-solid fa-plus"></i> Buat Target
+          </a>
+        </div>
+      </section>
+
+      <!-- ---- Level / XP Bar ---- -->
+      <section class="level-card" aria-label="Progress level">
+        <div class="level-card-left">
+          <div class="level-badge" id="levelBadgeIcon">🥚</div>
+          <div>
+            <p class="level-card-name" id="levelCardName">Telur Menetas</p>
+            <p class="level-card-sub"><span id="levelCurrentXp">Rp0</span> / <span id="levelNextXp">Rp50.000</span> menuju <span id="levelNextName">Bibit Harapan</span></p>
+          </div>
+        </div>
+        <div class="xp-bar">
+          <div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div>
+        </div>
+      </section>
+
+      <!-- ---- Ringkasan Bulan Ini ---- -->
+      <section class="summary-card" aria-label="Ringkasan bulan ini">
+        <div class="summary-card-head">
+          <h2>Ringkasan Bulan Ini</h2>
+          <span class="summary-card-period" id="summaryPeriod">Juli 2026</span>
+        </div>
+
+        <div class="summary-bars" id="summaryBars" aria-hidden="true">
+          <!-- bars injected by JS -->
+        </div>
+        <p class="summary-empty-msg" id="summaryEmptyMsg" hidden>Belum ada transaksi dalam 14 hari terakhir.</p>
+
+        <div class="summary-legend">
+          <span><i class="legend-dot legend-dot--income"></i> Pemasukan</span>
+          <span><i class="legend-dot legend-dot--expense"></i> Pengeluaran</span>
+          <span><i class="legend-dot legend-dot--saving"></i> Tabungan</span>
+        </div>
+      </section>
+
+      <!-- ---- Riwayat Transaksi Terbaru ---- -->
+      <section class="recent-tx" aria-label="Transaksi terbaru">
+        <div class="recent-tx-head">
+          <h2>Transaksi Terbaru</h2>
+          <a href="#" class="recent-tx-link" data-page="transaksi">Lihat semua <i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+
+        <ul class="tx-list" id="txList">
+          <!-- transaksi terbaru dirender oleh JS -->
+        </ul>
+        <p class="tx-list-empty" id="txListEmpty" hidden>Belum ada transaksi. Yuk catat transaksi pertamamu!</p>
+      </section>
+
+      <!-- ---- Achievement Teaser ---- -->
+      <section class="achievement-teaser" aria-label="Achievement terbaru">
+        <div class="recent-tx-head">
+          <h2>Achievement</h2>
+          <span class="achievement-count-chip" id="achievementCountChip">0 / 19</span>
+        </div>
+        <div class="achievement-strip" id="achievementStrip">
+          <!-- badge achievement dirender oleh JS -->
+        </div>
+        <a href="#" class="recent-tx-link achievement-viewall-link" data-page="achievement">Lihat semua achievement <i class="fa-solid fa-chevron-right"></i></a>
+      </section>
+
+      <div class="content-bottom-spacer" aria-hidden="true"></div>
+     </div>
+     <!-- ================= PAGE: TRANSAKSI ================= -->
+     <div class="page content" id="page-transaksi" hidden>
+
+      <section class="tx-page-header">
+        <div>
+          <h2>Transaksi</h2>
+          <p class="tx-page-sub">Kelola seluruh riwayat pemasukan, pengeluaran, dan tabunganmu.</p>
+        </div>
+        <button class="btn-primary" id="openAddTxBtn" type="button">
+          <i class="fa-solid fa-plus"></i> Tambah Transaksi
+        </button>
+      </section>
+
+      <section class="tx-toolbar">
+        <div class="tx-search">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input type="search" id="txSearchInput" placeholder="Cari kategori atau catatan...">
+        </div>
+
+        <div class="tx-filter-chips" id="txFilterChips" role="group" aria-label="Filter tipe transaksi">
+          <button class="filter-chip is-active" data-filter="ALL" type="button">Semua</button>
+          <button class="filter-chip" data-filter="INCOME" type="button">Pemasukan</button>
+          <button class="filter-chip" data-filter="EXPENSE" type="button">Pengeluaran</button>
+          <button class="filter-chip" data-filter="SAVING" type="button">Tabungan</button>
+          <button class="filter-chip" data-filter="WITHDRAWAL" type="button">Penarikan</button>
+        </div>
+
+        <div class="tx-sort">
+          <label for="txSortSelect" class="sr-only">Urutkan transaksi</label>
+          <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i>
+          <select id="txSortSelect">
+            <option value="date_desc">Terbaru</option>
+            <option value="date_asc">Terlama</option>
+            <option value="amount_desc">Nominal Tertinggi</option>
+            <option value="amount_asc">Nominal Terendah</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="tx-page-list-wrap">
+        <p class="tx-result-count" id="txResultCount">Memuat transaksi...</p>
+
+        <!-- Loading skeleton -->
+        <ul class="tx-list" id="txSkeleton" hidden></ul>
+
+        <!-- Empty state -->
+        <div class="tx-empty-state" id="txEmptyState" hidden>
+          <div class="tx-empty-icon"><i class="fa-solid fa-inbox"></i></div>
+          <h3>Belum ada transaksi</h3>
+          <p id="txEmptyMessage">Coba ubah kata kunci pencarian atau filter yang kamu gunakan.</p>
+          <button class="btn-secondary" id="txEmptyResetBtn" type="button">Reset Filter</button>
+        </div>
+
+        <ul class="tx-list tx-page-list" id="txPageList"></ul>
+      </section>
+
+      <div class="content-bottom-spacer" aria-hidden="true"></div>
+     </div>
+     <!-- ================= PAGE: TARGET / WISHLIST ================= -->
+     <div class="page content" id="page-target" hidden>
+
+      <section class="tx-page-header">
+        <div>
+          <h2>Target Tabungan</h2>
+          <p class="tx-page-sub">Satu target aktif dalam satu waktu — fokus sampai tercapai.</p>
+        </div>
+        <button class="btn-primary" id="openAddTargetBtn" type="button" hidden>
+          <i class="fa-solid fa-plus"></i> Tambah Target
+        </button>
+      </section>
+
+      <!-- Loading skeleton -->
+      <div class="target-page-skeleton" id="targetPageSkeleton" hidden>
+        <div class="skeleton-block" style="height:280px;border-radius:26px;"></div>
+      </div>
+
+      <!-- Empty state: belum ada target aktif -->
+      <div class="tx-empty-state" id="targetEmptyState" hidden>
+        <div class="tx-empty-icon"><i class="fa-solid fa-bullseye"></i></div>
+        <h3>Belum ada target aktif</h3>
+        <p>Buat target tabungan pertamamu dan mulai kumpulkan sedikit demi sedikit.</p>
+        <button class="btn-primary" id="targetEmptyAddBtn" type="button">
+          <i class="fa-solid fa-plus"></i> Buat Target
+        </button>
+      </div>
+
+      <!-- Target aktif -->
+      <section class="target-card target-card--page" id="targetPageCard" aria-label="Detail target tabungan" hidden>
+        <div class="target-card-head">
+          <div>
+            <p class="target-card-eyebrow">Target Aktif</p>
+            <h2 class="target-card-title" id="targetPageName">Nama Target</h2>
+          </div>
+          <span class="target-card-badge" id="targetPagePercentBadge">42%</span>
+        </div>
+
+        <div class="target-visual" aria-hidden="true">
+          <svg class="laptop-fill" viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <clipPath id="laptopClip2">
+                <path d="M30 20 h160 a8 8 0 0 1 8 8 v70 h-176 v-70 a8 8 0 0 1 8-8 z" />
+              </clipPath>
+              <linearGradient id="fillGradient2" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="var(--accent-mint)" />
+                <stop offset="100%" stop-color="var(--accent-mint-light)" />
+              </linearGradient>
+            </defs>
+            <path d="M14 104 h192 l10 18 a6 6 0 0 1 -6 8 h-200 a6 6 0 0 1 -6-8 z" fill="var(--laptop-base)" />
+            <path d="M30 20 h160 a8 8 0 0 1 8 8 v70 h-176 v-70 a8 8 0 0 1 8-8 z" fill="var(--laptop-screen-bg)" stroke="var(--laptop-frame)" stroke-width="3"/>
+            <g clip-path="url(#laptopClip2)">
+              <rect id="fillRect2" x="14" y="98" width="192" height="0" fill="url(#fillGradient2)"/>
+              <path id="fillWave2" d="M14 98 q24 -6 48 0 t48 0 t48 0 t48 0 v60 h-192 z" fill="url(#fillGradient2)" opacity="0.9"/>
+            </g>
+            <text x="110" y="60" text-anchor="middle" class="laptop-percent-text" id="laptopPercentText2">42%</text>
+          </svg>
+        </div>
+
+        <div class="target-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="42" aria-label="Progress target" id="targetPageProgressBar">
+          <div class="target-progress-fill" id="targetPageProgressFill" style="width:42%"></div>
+        </div>
+
+        <div class="target-card-figures">
+          <div>
+            <p class="target-figure-label">Harga Target</p>
+            <p class="target-figure-value" id="targetPagePrice">Rp20.000.000</p>
+          </div>
+          <div>
+            <p class="target-figure-label">Terkumpul</p>
+            <p class="target-figure-value" id="targetPageCollected">Rp8.450.000</p>
+          </div>
+          <div>
+            <p class="target-figure-label">Sisa</p>
+            <p class="target-figure-value" id="targetPageRemaining">Rp11.550.000</p>
+          </div>
+        </div>
+
+        <div class="target-estimate" id="targetPageEstimate">
+          <i class="fa-solid fa-clock"></i>
+          <span id="targetPageEstimateText">Estimasi tercapai: 28 Okt 2026</span>
+        </div>
+
+        <div class="target-page-actions">
+          <button class="btn-secondary" id="editTargetBtn" type="button">
+            <i class="fa-solid fa-pen"></i> Edit Target
+          </button>
+          <button class="btn-danger btn-danger--outline" id="deleteTargetBtn" type="button">
+            <i class="fa-solid fa-trash"></i> Hapus Target
+          </button>
+        </div>
+      </section>
+
+      <div class="content-bottom-spacer" aria-hidden="true"></div>
+     </div>
+     <!-- ================= PAGE: STATISTIK ================= -->
+     <div class="page content" id="page-statistik" hidden>
+
+      <section class="tx-page-header">
+        <div>
+          <h2>Statistik</h2>
+          <p class="tx-page-sub">Pantau perkembangan keuanganmu dari waktu ke waktu.</p>
+        </div>
+      </section>
+
+      <!-- Filter periode -->
+      <section class="tx-toolbar stat-toolbar">
+        <div class="tx-filter-chips" id="statFilterChips" role="group" aria-label="Filter periode statistik">
+          <button class="filter-chip" data-period="day" type="button">Harian</button>
+          <button class="filter-chip" data-period="week" type="button">Mingguan</button>
+          <button class="filter-chip is-active" data-period="month" type="button">Bulanan</button>
+          <button class="filter-chip" data-period="year" type="button">Tahunan</button>
+        </div>
+      </section>
+
+      <!-- Loading skeleton -->
+      <div class="stat-skeleton" id="statSkeleton" hidden>
+        <div class="stat-grid stat-grid--summary">
+          <div class="skeleton-block" style="height:92px;border-radius:18px;"></div>
+          <div class="skeleton-block" style="height:92px;border-radius:18px;"></div>
+          <div class="skeleton-block" style="height:92px;border-radius:18px;"></div>
+          <div class="skeleton-block" style="height:92px;border-radius:18px;"></div>
+          <div class="skeleton-block" style="height:92px;border-radius:18px;"></div>
+        </div>
+        <div class="skeleton-block" style="height:260px;border-radius:26px;margin-top:16px;"></div>
+        <div class="skeleton-block" style="height:260px;border-radius:26px;margin-top:16px;"></div>
+      </div>
+
+      <!-- Empty state: belum ada transaksi sama sekali -->
+      <div class="tx-empty-state" id="statEmptyState" hidden>
+        <div class="tx-empty-icon"><i class="fa-solid fa-chart-pie"></i></div>
+        <h3>Belum ada data statistik</h3>
+        <p>Catat transaksi pertamamu dulu di halaman Transaksi supaya grafik bisa tampil di sini.</p>
+      </div>
+
+      <!-- Konten statistik -->
+      <div id="statContent" hidden>
+
+        <!-- Ringkasan -->
+        <section class="stat-grid stat-grid--summary" aria-label="Ringkasan statistik">
+          <article class="stat-card stat-card--saving">
+            <div class="stat-card-icon"><i class="fa-solid fa-arrow-down"></i></div>
+            <p class="stat-card-label">Total Pemasukan</p>
+            <p class="stat-card-value" id="statTotalIncome">Rp0</p>
+            <p class="stat-card-foot" id="statPeriodLabelIncome">Periode ini</p>
+          </article>
+
+          <article class="stat-card stat-card--streak">
+            <div class="stat-card-icon"><i class="fa-solid fa-arrow-up"></i></div>
+            <p class="stat-card-label">Total Pengeluaran</p>
+            <p class="stat-card-value" id="statTotalExpense">Rp0</p>
+            <p class="stat-card-foot" id="statPeriodLabelExpense">Periode ini</p>
+          </article>
+
+          <article class="stat-card stat-card--xp">
+            <div class="stat-card-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+            <p class="stat-card-label">Total Tabungan</p>
+            <p class="stat-card-value" id="statTotalSaving">Rp0</p>
+            <p class="stat-card-foot" id="statPeriodLabelSaving">Periode ini</p>
+          </article>
+
+          <article class="stat-card stat-card--balance">
+            <div class="stat-card-icon"><i class="fa-solid fa-wallet"></i></div>
+            <p class="stat-card-label">Saldo Saat Ini</p>
+            <p class="stat-card-value" id="statCurrentBalance">Rp0</p>
+            <p class="stat-card-foot">Sepanjang waktu</p>
+          </article>
+
+          <article class="stat-card stat-card--count">
+            <div class="stat-card-icon"><i class="fa-solid fa-receipt"></i></div>
+            <p class="stat-card-label">Jumlah Transaksi</p>
+            <p class="stat-card-value" id="statTxCount">0</p>
+            <p class="stat-card-foot" id="statPeriodLabelCount">Periode ini</p>
+          </article>
+        </section>
+
+        <!-- Grafik: Tren Pemasukan / Pengeluaran / Tabungan -->
+        <section class="chart-card" aria-label="Grafik pemasukan, pengeluaran, dan tabungan">
+          <div class="chart-card-head">
+            <h3>Pemasukan, Pengeluaran &amp; Tabungan</h3>
+            <span class="chart-card-sub" id="statTrendRangeLabel">14 hari terakhir</span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chartTrend" role="img" aria-label="Grafik batang pemasukan, pengeluaran, dan tabungan per periode"></canvas>
+          </div>
+        </section>
+
+        <!-- Grafik: Perkembangan Saldo -->
+        <section class="chart-card" aria-label="Grafik perkembangan saldo">
+          <div class="chart-card-head">
+            <h3>Perkembangan Saldo</h3>
+            <span class="chart-card-sub" id="statBalanceRangeLabel">14 hari terakhir</span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chartBalance" role="img" aria-label="Grafik garis perkembangan saldo kumulatif"></canvas>
+          </div>
+        </section>
+
+        <!-- Grafik: Ringkasan Bulanan -->
+        <section class="chart-card" aria-label="Grafik ringkasan bulanan">
+          <div class="chart-card-head">
+            <h3>Ringkasan Bulanan</h3>
+            <span class="chart-card-sub">6 bulan terakhir</span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chartMonthly" role="img" aria-label="Grafik batang ringkasan bulanan"></canvas>
+          </div>
+        </section>
+
+        <!-- Insight -->
+        <section class="insight-card" aria-label="Insight statistik">
+          <div class="chart-card-head">
+            <h3><i class="fa-solid fa-lightbulb"></i> Insight</h3>
+          </div>
+          <ul class="insight-list" id="insightList">
+            <!-- diisi oleh JS -->
+          </ul>
+        </section>
+
+      </div>
+
+      <div class="content-bottom-spacer" aria-hidden="true"></div>
+     </div>
+     <!-- ================= PAGE: ACHIEVEMENT ================= -->
+     <div class="page content" id="page-achievement" hidden>
+
+      <section class="tx-page-header">
+        <div>
+          <h2>Achievement</h2>
+          <p class="tx-page-sub">Kumpulkan pencapaian dari kebiasaan menabungmu.</p>
+        </div>
+      </section>
+
+      <!-- Ringkasan -->
+      <section class="stat-grid stat-grid--summary" aria-label="Ringkasan achievement">
+        <article class="stat-card stat-card--xp">
+          <div class="stat-card-icon"><i class="fa-solid fa-award"></i></div>
+          <p class="stat-card-label">Total Achievement</p>
+          <p class="stat-card-value" id="achTotalCount">19</p>
+          <p class="stat-card-foot">Tersedia untuk dibuka</p>
+        </article>
+
+        <article class="stat-card stat-card--saving">
+          <div class="stat-card-icon"><i class="fa-solid fa-lock-open"></i></div>
+          <p class="stat-card-label">Terbuka</p>
+          <p class="stat-card-value" id="achUnlockedCount">0</p>
+          <p class="stat-card-foot">Achievement yang sudah didapat</p>
+        </article>
+
+        <article class="stat-card stat-card--streak">
+          <div class="stat-card-icon"><i class="fa-solid fa-lock"></i></div>
+          <p class="stat-card-label">Terkunci</p>
+          <p class="stat-card-value" id="achLockedCount">19</p>
+          <p class="stat-card-foot">Masih menunggu dibuka</p>
+        </article>
+
+        <article class="stat-card stat-card--balance">
+          <div class="stat-card-icon"><i class="fa-solid fa-chart-line"></i></div>
+          <p class="stat-card-label">Progress Keseluruhan</p>
+          <p class="stat-card-value" id="achOverallProgress">0%</p>
+          <p class="stat-card-foot">Dari seluruh achievement</p>
+        </article>
+      </section>
+
+      <!-- Toolbar: search + filter -->
+      <section class="tx-toolbar stat-toolbar">
+        <div class="tx-search">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input type="search" id="achSearchInput" placeholder="Cari achievement...">
+        </div>
+
+        <div class="tx-filter-chips" id="achStatusChips" role="group" aria-label="Filter status achievement">
+          <button class="filter-chip is-active" data-status="ALL" type="button">Semua</button>
+          <button class="filter-chip" data-status="UNLOCKED" type="button">Terbuka</button>
+          <button class="filter-chip" data-status="LOCKED" type="button">Terkunci</button>
+        </div>
+
+        <div class="tx-filter-chips" id="achRarityChips" role="group" aria-label="Filter rarity achievement">
+          <button class="filter-chip is-active" data-rarity="ALL" type="button">Semua Rarity</button>
+          <button class="filter-chip" data-rarity="COMMON" type="button">Common</button>
+          <button class="filter-chip" data-rarity="UNCOMMON" type="button">Uncommon</button>
+          <button class="filter-chip" data-rarity="RARE" type="button">Rare</button>
+          <button class="filter-chip" data-rarity="EPIC" type="button">Epic</button>
+          <button class="filter-chip" data-rarity="MYTHIC" type="button">Mythic</button>
+          <button class="filter-chip" data-rarity="ARTIFACT" type="button">Artifact</button>
+        </div>
+      </section>
+
+      <p class="ach-source-note" id="achSourceNote" hidden></p>
+
+      <!-- Loading skeleton -->
+      <div class="ach-skeleton-grid" id="achSkeleton" hidden>
+        <div class="skeleton-block" style="height:150px;border-radius:20px;"></div>
+        <div class="skeleton-block" style="height:150px;border-radius:20px;"></div>
+        <div class="skeleton-block" style="height:150px;border-radius:20px;"></div>
+        <div class="skeleton-block" style="height:150px;border-radius:20px;"></div>
+        <div class="skeleton-block" style="height:150px;border-radius:20px;"></div>
+        <div class="skeleton-block" style="height:150px;border-radius:20px;"></div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="tx-empty-state" id="achEmptyState" hidden>
+        <div class="tx-empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+        <h3>Achievement tidak ditemukan</h3>
+        <p id="achEmptyMessage">Coba ubah kata kunci pencarian atau filter yang kamu gunakan.</p>
+        <button class="btn-secondary" id="achEmptyResetBtn" type="button">Reset Filter</button>
+      </div>
+
+      <p class="tx-result-count" id="achResultCount" hidden></p>
+
+      <!-- Grid achievement -->
+      <div class="ach-grid" id="achGrid"></div>
+
+      <div class="content-bottom-spacer" aria-hidden="true"></div>
+     </div>
+    </main>
+  </div>
+
+</div>
+
+<!-- ================= MODAL: TAMBAH / EDIT TARGET ================= -->
+<div class="modal-overlay" id="targetModalOverlay" hidden>
+  <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="targetModalTitle">
+    <div class="modal-head">
+      <h3 id="targetModalTitle">Tambah Target</h3>
+      <button class="modal-close" id="targetModalClose" type="button" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <form id="targetForm" novalidate>
+      <div class="form-group">
+        <label for="targetFormNama">Nama Target</label>
+        <input type="text" id="targetFormNama" placeholder="cth: ASUS TUF Gaming A15" autocomplete="off">
+        <p class="form-error" id="errTargetNama"></p>
+      </div>
+
+      <div class="form-group">
+        <label for="targetFormNominal">Harga Target (Rp)</label>
+        <input type="number" id="targetFormNominal" placeholder="0" min="1" inputmode="numeric">
+        <p class="form-error" id="errTargetNominal"></p>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="targetModalCancel">Batal</button>
+        <button type="submit" class="btn-primary" id="targetModalSubmit">
+          <span class="btn-label">Simpan Target</span>
+          <span class="btn-spinner" id="targetModalSpinner" hidden></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL: TAMBAH / EDIT TRANSAKSI ================= -->
+<div class="modal-overlay" id="txModalOverlay" hidden>
+  <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="txModalTitle">
+    <div class="modal-head">
+      <h3 id="txModalTitle">Tambah Transaksi</h3>
+      <button class="modal-close" id="txModalClose" type="button" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <form id="txForm" novalidate>
+      <input type="hidden" id="txFormId" value="">
+      <input type="hidden" id="txFormTipe" value="">
+
+      <div class="form-group">
+        <label id="txFormTipeLabel">Tipe Transaksi</label>
+        <div class="tipe-select-group" id="txFormTipeGroup" role="radiogroup" aria-labelledby="txFormTipeLabel">
+          <button type="button" class="tipe-btn" data-tipe="INCOME" role="radio" aria-checked="false">
+            <i class="fa-solid fa-arrow-down"></i> Pemasukan
+          </button>
+          <button type="button" class="tipe-btn" data-tipe="EXPENSE" role="radio" aria-checked="false">
+            <i class="fa-solid fa-arrow-up"></i> Pengeluaran
+          </button>
+          <button type="button" class="tipe-btn" data-tipe="SAVING" role="radio" aria-checked="false">
+            <i class="fa-solid fa-piggy-bank"></i> Tabungan
+          </button>
+          <button type="button" class="tipe-btn" data-tipe="WITHDRAWAL" role="radio" aria-checked="false">
+            <i class="fa-solid fa-rotate-left"></i> Penarikan
+          </button>
+        </div>
+        <p class="form-error" id="errTipe"></p>
+      </div>
+
+      <div class="form-group" id="groupTarget" hidden>
+        <label for="txFormTarget">Target Tabungan</label>
+        <select id="txFormTarget">
+          <!-- opsi diisi dinamis oleh TxModal.syncTargetOptions() sesuai target aktif saat ini -->
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="txFormTanggal">Tanggal</label>
+          <input type="date" id="txFormTanggal">
+          <p class="form-error" id="errTanggal"></p>
+        </div>
+        <div class="form-group">
+          <label for="txFormNominal">Nominal (Rp)</label>
+          <input type="number" id="txFormNominal" placeholder="0" min="1" inputmode="numeric">
+          <p class="form-error" id="errNominal"></p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="txFormKategori">Kategori</label>
+        <input type="text" id="txFormKategori" list="kategoriSuggestions" placeholder="cth: Makanan, Uang Saku" autocomplete="off">
+        <datalist id="kategoriSuggestions"></datalist>
+        <p class="form-error" id="errKategori"></p>
+      </div>
+
+      <div class="form-group">
+        <label for="txFormKeterangan">Catatan <span class="form-optional">(opsional)</span></label>
+        <textarea id="txFormKeterangan" rows="2" placeholder="Tambahkan catatan singkat..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="txModalCancel">Batal</button>
+        <button type="submit" class="btn-primary" id="txModalSubmit">
+          <span class="btn-label">Simpan Transaksi</span>
+          <span class="btn-spinner" id="txModalSpinner" hidden></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL: KONFIRMASI HAPUS ================= -->
+<div class="modal-overlay" id="deleteModalOverlay" hidden>
+  <div class="modal-sheet modal-sheet--sm" role="alertdialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="delete-modal-icon"><i class="fa-solid fa-trash-can"></i></div>
+    <h3 id="deleteModalTitle">Hapus transaksi ini?</h3>
+    <p id="deleteModalDesc">Tindakan ini tidak bisa dibatalkan. Data transaksi akan dihapus permanen.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="deleteModalCancel">Batal</button>
+      <button type="button" class="btn-danger" id="deleteModalConfirm">
+        <span class="btn-label">Ya, Hapus</span>
+        <span class="btn-spinner" id="deleteModalSpinner" hidden></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: KONEKSI BACKEND (Tahap 6) ================= -->
+<div class="modal-overlay" id="connModalOverlay" hidden>
+  <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="connModalTitle">
+    <div class="modal-head">
+      <h3 id="connModalTitle">Sambungkan ke Google Sheets</h3>
+      <button class="modal-close" id="connModalClose" type="button" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Ditampilkan saat SUDAH tersambung -->
+    <div id="connConnectedView" hidden>
+      <div class="conn-status-banner" id="connStatusBanner">
+        <i class="fa-solid fa-circle-check"></i>
+        <div>
+          <p class="conn-status-title">Tersambung</p>
+          <p class="conn-status-sub" id="connStatusSub">Data tersinkron dengan Google Sheets.</p>
+        </div>
+      </div>
+      <p class="conn-queue-note" id="connQueueNote" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="connRetryBtn">
+          <i class="fa-solid fa-rotate"></i> Cek Ulang &amp; Sinkron
+        </button>
+        <button type="button" class="btn-danger btn-danger--outline" id="connDisconnectBtn">Putuskan</button>
+      </div>
+    </div>
+
+    <!-- Ditampilkan saat BELUM tersambung -->
+    <form id="connForm">
+      <p class="tx-page-sub" style="margin-bottom:16px;">Hubungkan aplikasi ke Google Apps Script Web App-mu supaya data tersimpan di Google Sheets. Tanpa ini, aplikasi tetap berjalan penuh secara offline.</p>
+
+      <div class="form-group">
+        <label for="connFormUrl">URL Google Apps Script Web App</label>
+        <input type="url" id="connFormUrl" placeholder="https://script.google.com/macros/s/xxx/exec" autocomplete="off">
+        <p class="form-error" id="errConnUrl"></p>
+      </div>
+      <div class="form-group">
+        <label for="connFormUsername">Username</label>
+        <input type="text" id="connFormUsername" placeholder="admin" autocomplete="username">
+        <p class="form-error" id="errConnUsername"></p>
+      </div>
+      <div class="form-group">
+        <label for="connFormPassword">Password</label>
+        <input type="password" id="connFormPassword" placeholder="••••••••" autocomplete="current-password">
+        <p class="form-error" id="errConnPassword"></p>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="connModalCancel">Nanti Saja</button>
+        <button type="submit" class="btn-primary" id="connModalSubmit">
+          <span class="btn-label">Sambungkan</span>
+          <span class="btn-spinner" id="connModalSpinner" hidden></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= TOAST CONTAINER ================= -->
+<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ================= BOTTOM NAV (mobile) ================= -->
+<nav class="bottom-nav" aria-label="Navigasi bawah">
+  <a href="#" class="bottom-nav-link is-active" data-page="dashboard">
+    <i class="fa-solid fa-house"></i>
+    <span>Dashboard</span>
+  </a>
+  <a href="#" class="bottom-nav-link" data-page="transaksi">
+    <i class="fa-solid fa-receipt"></i>
+    <span>Transaksi</span>
+  </a>
+  <a href="#" class="bottom-nav-fab" data-page="tambah" aria-label="Tambah transaksi">
+    <i class="fa-solid fa-plus"></i>
+  </a>
+  <a href="#" class="bottom-nav-link" data-page="target">
+    <i class="fa-solid fa-bullseye"></i>
+    <span>Target</span>
+  </a>
+  <a href="#" class="bottom-nav-link" data-page="statistik">
+    <i class="fa-solid fa-chart-simple"></i>
+    <span>Statistik</span>
+  </a>
+</nav>
+
+<script src="js/api/apiClient.js"></script>
+<script src="js/api/authApi.js"></script>
+<script src="js/api/transactionApi.js"></script>
+<script src="js/api/targetApi.js"></script>
+<script src="js/api/statisticsApi.js"></script>
+<script src="js/api/achievementApi.js"></script>
+<script src="js/api/syncManager.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>
