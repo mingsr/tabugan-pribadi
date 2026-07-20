@@ -1,0 +1,20 @@
+/* ============================================================
+   js/api/achievementApi.js — TAHAP 6
+   Mengambil daftar achievement ASLI dari backend (47 item di
+   ACHIEVEMENTS_MASTER) untuk mode online. Mode offline tetap
+   memakai mesin lokal js/achievements.js (19 item) — lihat
+   catatan arsitektur di ringkasan Tahap 6.
+   ============================================================ */
+
+(function (global) {
+  'use strict';
+
+  function getAchievements() {
+    return global.NUMD_API.postWithRetry('getAchievements', {});
+    // -> { achievements: [...], total, summary }
+  }
+
+  global.NUMD_ACH_API = {
+    getAchievements: getAchievements,
+  };
+})(window);

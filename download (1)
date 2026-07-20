@@ -1,0 +1,199 @@
+/* ============================================================
+   NABUNG UNTUK MASA DEPAN — achievements.js
+   TAHAP 5: Modul Achievement & Gamification.
+
+   Modul ini SENGAJA berdiri sendiri (tidak bergantung pada DOM
+   atau state aplikasi utama) supaya:
+   - Mudah dites secara terpisah.
+   - Bisa dipakai ulang kalau nanti dipindah ke backend (Tahap 6),
+     karena bentuk objeknya sudah meniru ACHIEVEMENTS_MASTER di
+     Google Apps Script (00_Config.gs): key, nama, deskripsi, icon,
+     category, rarity, is_secret, trigger_type, trigger_value.
+
+   Cara pakai (lihat script.js):
+     const stats   = { savingTotal, savingCount, transactionCount, ... };
+     const context = { justAddedTx: {...} }; // opsional, untuk achievement rahasia
+     const list    = NUMD_ACH.getAll(unlockedMap, stats);
+     const newly   = NUMD_ACH.checkNewUnlocks(unlockedMap, stats, context);
+   ============================================================ */
+
+(function (global) {
+  'use strict';
+
+  const RARITY_ORDER = { COMMON: 1, UNCOMMON: 2, RARE: 3, EPIC: 4, MYTHIC: 5, ARTIFACT: 6 };
+
+  const RARITY_LABEL = {
+    COMMON: 'Common',
+    UNCOMMON: 'Uncommon',
+    RARE: 'Rare',
+    EPIC: 'Epic',
+    MYTHIC: 'Mythic',
+    ARTIFACT: 'Artifact',
+  };
+
+  /**
+   * Daftar master achievement. Key & beberapa nilai trigger sengaja
+   * disamakan dengan ACHIEVEMENTS_MASTER backend (achievement tabungan,
+   * target, transaksi) supaya konsisten begitu Tahap 6 menyambungkan
+   * ke Google Sheets. Achievement konsistensi (streak) & beberapa
+   * rahasia belum ada di backend — ditandai lewat komentar di bawah.
+   */
+  const MASTER = [
+    // ── TABUNGAN ──────────────────────────────────────────────
+    { key: 'first_save', nama: 'Nabung Pertama', deskripsi: 'Melakukan tabungan pertama.', icon: '🪙', category: 'SAVING', rarity: 'COMMON', is_secret: false, trigger_type: 'saving_count', trigger_value: 1 },
+    { key: 'first_100k', nama: 'Rp100.000 Pertama', deskripsi: 'Total tabungan mencapai Rp100.000.', icon: '💰', category: 'SAVING', rarity: 'COMMON', is_secret: false, trigger_type: 'saving_total', trigger_value: 100000 },
+    { key: 'first_500k', nama: 'Rp500.000 Pertama', deskripsi: 'Total tabungan mencapai Rp500.000.', icon: '💵', category: 'SAVING', rarity: 'COMMON', is_secret: false, trigger_type: 'saving_total', trigger_value: 500000 },
+    { key: 'first_1jt', nama: 'Rp1.000.000 Pertama', deskripsi: 'Total tabungan mencapai Rp1.000.000.', icon: '💸', category: 'SAVING', rarity: 'UNCOMMON', is_secret: false, trigger_type: 'saving_total', trigger_value: 1000000 },
+    { key: 'first_5jt', nama: 'Rp5.000.000 Pertama', deskripsi: 'Total tabungan mencapai Rp5.000.000.', icon: '💎', category: 'SAVING', rarity: 'RARE', is_secret: false, trigger_type: 'saving_total', trigger_value: 5000000 },
+
+    // ── TARGET ────────────────────────────────────────────────
+    { key: 'target_created', nama: 'Membuat Target Pertama', deskripsi: 'Membuat target tabungan pertama.', icon: '🎯', category: 'TARGET', rarity: 'COMMON', is_secret: false, trigger_type: 'target_created_count', trigger_value: 1 },
+    { key: 'target_completed_1', nama: 'Menyelesaikan Target Pertama', deskripsi: 'Berhasil mencapai 100% target tabungan.', icon: '🚀', category: 'TARGET', rarity: 'ARTIFACT', is_secret: false, trigger_type: 'target_completed_count', trigger_value: 1 },
+    { key: 'target_completed_5', nama: 'Menyelesaikan 5 Target', deskripsi: 'Berhasil menyelesaikan 5 target tabungan.', icon: '👑', category: 'TARGET', rarity: 'MYTHIC', is_secret: false, trigger_type: 'target_completed_count', trigger_value: 5 },
+
+    // ── AKTIVITAS ─────────────────────────────────────────────
+    { key: 'tx_10', nama: '10 Transaksi', deskripsi: 'Mencatat 10 transaksi.', icon: '📝', category: 'TRANSACTION', rarity: 'COMMON', is_secret: false, trigger_type: 'transaction_count', trigger_value: 10 },
+    { key: 'tx_50', nama: '50 Transaksi', deskripsi: 'Mencatat 50 transaksi.', icon: '📒', category: 'TRANSACTION', rarity: 'UNCOMMON', is_secret: false, trigger_type: 'transaction_count', trigger_value: 50 },
+    { key: 'tx_100', nama: '100 Transaksi', deskripsi: 'Mencatat 100 transaksi.', icon: '📊', category: 'TRANSACTION', rarity: 'RARE', is_secret: false, trigger_type: 'transaction_count', trigger_value: 100 },
+    // Struktur disiapkan untuk sistem login di masa depan — trigger_type
+    // ini TIDAK PERNAH dievaluasi/di-trigger di mana pun saat ini
+    // (loginCount pada stats selalu 0), sesuai permintaan: siapkan
+    // struktur tanpa mengaktifkan logikanya.
+    { key: 'first_login', nama: 'Login Pertama', deskripsi: 'Masuk ke aplikasi untuk pertama kalinya.', icon: '🔑', category: 'SYSTEM', rarity: 'COMMON', is_secret: false, trigger_type: 'login_count', trigger_value: 1 },
+
+    // ── KONSISTENSI (streak, belum ada di backend) ───────────────
+    { key: 'streak_7', nama: 'Menabung 7 Hari', deskripsi: 'Menabung 7 hari berturut-turut.', icon: '🔥', category: 'STREAK', rarity: 'UNCOMMON', is_secret: false, trigger_type: 'streak_days', trigger_value: 7 },
+    { key: 'streak_30', nama: 'Menabung 30 Hari', deskripsi: 'Menabung 30 hari berturut-turut.', icon: '🌟', category: 'STREAK', rarity: 'RARE', is_secret: false, trigger_type: 'streak_days', trigger_value: 30 },
+    { key: 'streak_100', nama: 'Menabung 100 Hari', deskripsi: 'Menabung 100 hari berturut-turut.', icon: '👑', category: 'STREAK', rarity: 'MYTHIC', is_secret: false, trigger_type: 'streak_days', trigger_value: 100 },
+
+    // ── RAHASIA (sama seperti ACHIEVEMENTS_MASTER backend) ────────
+    { key: 'secret_777', nama: 'Lucky Seven', deskripsi: 'Melakukan transaksi senilai tepat Rp777.', clue: 'Cobalah angka yang membawa keberuntungan.', icon: '🍀', category: 'SECRET', rarity: 'RARE', is_secret: true, trigger_type: 'exact_amount', trigger_value: 777 },
+    { key: 'secret_palindrome', nama: 'Mirror Money', deskripsi: 'Melakukan transaksi dengan nominal palindrom.', clue: 'Ada angka yang tetap sama saat dibalik.', icon: '🔄', category: 'SECRET', rarity: 'EPIC', is_secret: true, trigger_type: 'palindrome_amount', trigger_value: 1 },
+    { key: 'secret_night', nama: 'Night Owl', deskripsi: 'Mencatat transaksi antara pukul 00.00–04.00.', clue: 'Seseorang masih terjaga saat semua tertidur.', icon: '🦉', category: 'SECRET', rarity: 'EPIC', is_secret: true, trigger_type: 'hour_range', trigger_value: '0-4' },
+    { key: 'secret_comeback', nama: 'Comeback', deskripsi: 'Menabung lagi setelah vakum minimal 30 hari.', clue: 'Tidak ada kata terlambat untuk kembali.', icon: '🔥', category: 'SECRET', rarity: 'EPIC', is_secret: true, trigger_type: 'comeback_after_days', trigger_value: 30 },
+  ];
+
+  // XP reward ditentukan dari rarity (satu sumber kebenaran, bukan
+  // di-hardcode per achievement) — dipakai untuk skor "Total XP" di
+  // dashboard begitu achievement terbuka.
+  const XP_BY_RARITY = { COMMON: 20, UNCOMMON: 50, RARE: 120, EPIC: 250, MYTHIC: 500, ARTIFACT: 800 };
+  MASTER.forEach(ach => { ach.xp_reward = XP_BY_RARITY[ach.rarity] || 20; });
+
+  /**
+   * Hitung progress satu achievement terhadap snapshot stats.
+   * Return: { current, max, percent } — current/max bernilai null
+   * untuk trigger tanpa progress linier (mis. achievement rahasia
+   * berbasis kejadian, bukan angka kumulatif).
+   */
+  function computeProgress(ach, stats) {
+    const tv = ach.trigger_value;
+
+    function build(current, max) {
+      if (current === null || max === null || max === undefined) return { current: null, max: null, percent: null };
+      const pct = max > 0 ? Math.min(100, Math.round((current / max) * 1000) / 10) : (current >= max ? 100 : 0);
+      return { current: current, max: max, percent: pct };
+    }
+
+    switch (ach.trigger_type) {
+      case 'saving_total': return build(Math.min(stats.savingTotal, tv), tv);
+      case 'saving_count': return build(Math.min(stats.savingCount, tv), tv);
+      case 'transaction_count': return build(Math.min(stats.transactionCount, tv), tv);
+      case 'target_created_count': return build(Math.min(stats.targetCreatedCount, tv), tv);
+      case 'target_completed_count': return build(Math.min(stats.targetCompletedCount, tv), tv);
+      case 'streak_days': return build(Math.min(stats.streakDays, tv), tv);
+      case 'login_count': return build(Math.min(stats.loginCount || 0, tv), tv);
+      // Rahasia berbasis kejadian — tidak punya progress linier
+      case 'exact_amount':
+      case 'palindrome_amount':
+      case 'hour_range':
+      case 'comeback_after_days':
+      default:
+        return { current: null, max: null, percent: null };
+    }
+  }
+
+  /**
+   * Evaluasi apakah satu achievement SEHARUSNYA terbuka sekarang.
+   * `context` opsional berisi info transaksi yang baru saja
+   * ditambahkan — dipakai khusus untuk achievement rahasia yang
+   * bergantung pada kejadian spesifik (bukan angka kumulatif).
+   */
+  function evaluate(ach, stats, context) {
+    const tv = ach.trigger_value;
+    const tx = context && context.justAddedTx;
+
+    switch (ach.trigger_type) {
+      case 'saving_total': return stats.savingTotal >= tv;
+      case 'saving_count': return stats.savingCount >= tv;
+      case 'transaction_count': return stats.transactionCount >= tv;
+      case 'target_created_count': return stats.targetCreatedCount >= tv;
+      case 'target_completed_count': return stats.targetCompletedCount >= tv;
+      case 'streak_days': return stats.streakDays >= tv;
+      case 'login_count': return false; // struktur saja, sengaja tidak pernah aktif
+
+      case 'exact_amount':
+        return !!tx && Math.floor(tx.nominal) === Number(tv);
+
+      case 'palindrome_amount': {
+        if (!tx) return false;
+        const s = String(Math.floor(tx.nominal));
+        return s.length > 1 && s === s.split('').reverse().join('');
+      }
+
+      case 'hour_range': {
+        if (!tx || tx.submittedHour === undefined) return false;
+        const parts = String(tv).split('-');
+        const start = parseInt(parts[0], 10), end = parseInt(parts[1], 10);
+        return tx.submittedHour >= start && tx.submittedHour < end;
+      }
+
+      case 'comeback_after_days':
+        return !!(context && context.comebackGapDays !== undefined && context.comebackGapDays >= tv);
+
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Gabungkan master list dengan status unlock (dari peta
+   * { key: tanggalUnlockISOString }) + progress terkini.
+   */
+  function getAll(unlockedMap, stats) {
+    unlockedMap = unlockedMap || {};
+    return MASTER.map(ach => {
+      const isUnlocked = Boolean(unlockedMap[ach.key]);
+      const progress = computeProgress(ach, stats);
+      return Object.assign({}, ach, {
+        is_unlocked: isUnlocked,
+        tanggal_unlock: isUnlocked ? unlockedMap[ach.key] : null,
+        progress: progress.current,
+        target: progress.max,
+        progress_percent: progress.percent,
+      });
+    });
+  }
+
+  /**
+   * Cari achievement yang BARU memenuhi syarat (belum ada di
+   * unlockedMap) berdasarkan stats/context saat ini.
+   */
+  function checkNewUnlocks(unlockedMap, stats, context) {
+    unlockedMap = unlockedMap || {};
+    const newly = [];
+    MASTER.forEach(ach => {
+      if (unlockedMap[ach.key]) return;
+      if (evaluate(ach, stats, context)) newly.push(ach);
+    });
+    return newly;
+  }
+
+  global.NUMD_ACH = {
+    MASTER: MASTER,
+    RARITY_ORDER: RARITY_ORDER,
+    RARITY_LABEL: RARITY_LABEL,
+    computeProgress: computeProgress,
+    getAll: getAll,
+    checkNewUnlocks: checkNewUnlocks,
+  };
+})(window);
