@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statistik &amp; Achievement · Tabungan</title>
+  <link rel="stylesheet" href="statistics.css">
+  <script src="statistics.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <header class="page__head">
+      <h1>Statistik &amp; Achievement</h1>
+      <div class="filters">
+        <select id="selMonth" class="input" aria-label="Bulan"></select>
+        <select id="selYear" class="input" aria-label="Tahun"></select>
+        <button type="button" class="btn" id="refreshBtn">Refresh</button>
+      </div>
+    </header>
+
+    <!-- 1. Ringkasan -->
+    <section aria-labelledby="hSum">
+      <h2 class="group" id="hSum">Ringkasan bulan <span id="periodLabel"></span></h2>
+      <div class="state" id="sumState"></div>
+      <div class="sum" id="sumGrid" hidden>
+        <article class="card in"><h3>Pemasukan</h3><p id="sIncome"></p></article>
+        <article class="card out"><h3>Pengeluaran</h3><p id="sExpense"></p></article>
+        <article class="card sav"><h3>Tabungan</h3><p id="sSaving"></p><span class="sub" id="sNet"></span></article>
+        <article class="card"><h3>Jumlah transaksi</h3><p id="sCount"></p></article>
+      </div>
+    </section>
+
+    <!-- 2. Grafik -->
+    <section class="card" aria-labelledby="hChart">
+      <div class="row">
+        <h2 class="group" id="hChart">Grafik</h2>
+        <div class="seg" role="group" aria-label="Jenis grafik">
+          <button type="button" class="seg__btn is-active" data-mode="daily">Harian</button>
+          <button type="button" class="seg__btn" data-mode="trend">Bulanan</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--green)"></i>Pemasukan</span>
+        <span><i class="dot" style="background:var(--red)"></i>Pengeluaran</span>
+        <span><i class="dot" style="background:var(--purple)"></i>Tabungan</span>
+      </div>
+      <div class="state" id="chartState"></div>
+      <div id="chartArea"></div>
+    </section>
+
+    <!-- 3. Kategori -->
+    <section class="card" aria-labelledby="hCat">
+      <div class="row">
+        <h2 class="group" id="hCat">Kategori</h2>
+        <div class="seg" id="catTabs" role="group" aria-label="Jenis kategori">
+          <button type="button" class="seg__btn is-active" data-type="EXPENSE">Pengeluaran</button>
+          <button type="button" class="seg__btn" data-type="INCOME">Pemasukan</button>
+          <button type="button" class="seg__btn" data-type="SAVING">Tabungan</button>
+        </div>
+      </div>
+      <div class="state" id="catState"></div>
+      <ul class="cats" id="catList"></ul>
+    </section>
+
+    <!-- 4. Achievement -->
+    <section aria-labelledby="hAch">
+      <div class="row">
+        <h2 class="group" id="hAch">Achievement</h2>
+        <div class="seg" id="achTabs" role="group" aria-label="Filter achievement">
+          <button type="button" class="seg__btn is-active" data-f="all">Semua</button>
+          <button type="button" class="seg__btn" data-f="open">Terbuka</button>
+          <button type="button" class="seg__btn" data-f="locked">Terkunci</button>
+        </div>
+      </div>
+      <div class="state" id="achState"></div>
+      <div class="ach-sum" id="achSum" hidden></div>
+      <div class="ach-grid" id="achGrid"></div>
+    </section>
+
+    <!-- 5. Hall of Fame -->
+    <section aria-labelledby="hHof">
+      <h2 class="group" id="hHof">Hall of Fame</h2>
+      <div class="state" id="hofState"></div>
+      <div class="hof" id="hofList"></div>
+    </section>
+  </main>
+</body>
+</html>
