@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Keuangan · Tabungan</title>
+  <link rel="stylesheet" href="transactions.css">
+  <script src="transactions.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <header class="page__head">
+      <h1>Keuangan</h1>
+      <button type="button" class="btn" id="exportBtn">Export PDF</button>
+    </header>
+
+    <!-- 1. Ringkasan -->
+    <section class="sum" aria-label="Ringkasan keuangan">
+      <article class="card sum__total"><h2>Total keuangan</h2><p id="sumTotal">Rp0</p></article>
+      <article class="card"><h2>Tunai</h2><p id="sumCash">Rp0</p></article>
+      <article class="card"><h2>E-Wallet</h2><p id="sumEwallet">Rp0</p></article>
+      <article class="card in"><h2>Total pemasukan</h2><p id="sumIncome">Rp0</p></article>
+      <article class="card out"><h2>Total pengeluaran</h2><p id="sumExpense">Rp0</p></article>
+    </section>
+
+    <!-- 3 & 4. Search + filter -->
+    <section class="tools" aria-label="Cari dan filter">
+      <input type="search" id="search" class="input" placeholder="Cari kategori, catatan, atau nominal" aria-label="Cari transaksi">
+      <select id="filterCat" class="input" aria-label="Filter kategori"><option value="">Semua kategori</option></select>
+      <div class="chips" id="chips" role="group" aria-label="Filter jenis">
+        <button type="button" class="chip is-active" data-type="">Semua</button>
+        <button type="button" class="chip" data-type="INCOME">Pemasukan</button>
+        <button type="button" class="chip" data-type="EXPENSE">Pengeluaran</button>
+        <button type="button" class="chip" data-type="TRANSFER">Transfer</button>
+        <button type="button" class="chip" data-type="WISHLIST">Wishlist</button>
+      </div>
+    </section>
+
+    <!-- 2. Riwayat -->
+    <section aria-label="Riwayat transaksi">
+      <p class="count" id="count"></p>
+      <ul class="list" id="list"></ul>
+    </section>
+  </main>
+
+  <button type="button" class="add-btn" id="addBtn" aria-label="Tambah transaksi">+ <span>Tambah</span></button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- 5-7. Form tambah/edit -->
+  <dialog id="formDialog" class="modal">
+    <form id="txForm" novalidate>
+      <h2 id="formTitle">Tambah transaksi</h2>
+      <div class="tabs" id="typeTabs" role="group" aria-label="Jenis transaksi">
+        <button type="button" data-type="INCOME" class="is-active">Pemasukan</button>
+        <button type="button" data-type="EXPENSE">Pengeluaran</button>
+        <button type="button" data-type="TRANSFER">Transfer</button>
+      </div>
+
+      <label class="field" id="rowKategori">Kategori
+        <select id="fKategori" class="input"></select>
+      </label>
+      <label class="field" id="rowSumber">Sumber uang
+        <select id="fSumber" class="input"><option value="CASH">Tunai</option><option value="EWALLET">E-Wallet</option></select>
+      </label>
+      <label class="field" id="rowArah" hidden>Arah transfer
+        <select id="fArah" class="input"><option value="CASH>EWALLET">Tunai → E-Wallet</option><option value="EWALLET>CASH">E-Wallet → Tunai</option></select>
+      </label>
+
+      <label class="field">Nominal
+        <input id="fNominal" class="input" type="text" inputmode="numeric" placeholder="0" autocomplete="off">
+      </label>
+      <div class="quick" id="quick">
+        <button type="button" data-v="5000">Rp5K</button><button type="button" data-v="10000">Rp10K</button>
+        <button type="button" data-v="20000">Rp20K</button><button type="button" data-v="50000">Rp50K</button>
+        <button type="button" data-v="100000">Rp100K</button>
+      </div>
+
+      <div class="row2">
+        <label class="field">Tanggal<input id="fTanggal" class="input" type="date"></label>
+        <label class="field">Waktu<input id="fWaktu" class="input" type="time"></label>
+      </div>
+      <label class="field">Catatan (opsional)<input id="fKet" class="input" type="text" maxlength="120"></label>
+
+      <p class="error" id="formError" role="alert"></p>
+      <div class="actions">
+        <button type="button" class="btn btn--ghost" data-close>Batal</button>
+        <button type="submit" class="btn btn--primary" id="saveBtn">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 8. Konfirmasi hapus -->
+  <dialog id="confirmDialog" class="modal modal--sm">
+    <h2>Hapus transaksi?</h2>
+    <p class="muted" id="confirmText"></p>
+    <div class="actions">
+      <button type="button" class="btn btn--ghost" data-close>Batal</button>
+      <button type="button" class="btn btn--danger" id="confirmYes">Hapus</button>
+    </div>
+  </dialog>
+
+  <!-- 9. Export PDF -->
+  <dialog id="exportDialog" class="modal modal--sm">
+    <h2>Export laporan PDF</h2>
+    <label class="field">Periode
+      <select id="xPeriod" class="input">
+        <option value="month">Bulan ini</option>
+        <option value="30d">30 hari terakhir</option>
+        <option value="all">Semua</option>
+        <option value="custom">Rentang tanggal</option>
+      </select>
+    </label>
+    <div class="row2" id="xCustom" hidden>
+      <label class="field">Dari<input id="xFrom" class="input" type="date"></label>
+      <label class="field">Sampai<input id="xTo" class="input" type="date"></label>
+    </div>
+    <p class="muted">Laporan dibuka dalam dialog cetak. Pilih "Simpan sebagai PDF".</p>
+    <div class="actions">
+      <button type="button" class="btn btn--ghost" data-close>Batal</button>
+      <button type="button" class="btn btn--primary" id="xGo">Export</button>
+    </div>
+  </dialog>
+
+  <div id="printArea" aria-hidden="true"></div>
+</body>
+</html>
