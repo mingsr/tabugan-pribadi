@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Web Tabungan</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+<!-- ==================================================
+     # /login
+     ================================================== -->
+<main id="view-login" data-view="login">
+  <section aria-labelledby="login-title">
+    <header>
+      <h1 id="login-title">Web Tabungan</h1>
+      <p>Masuk untuk melanjutkan.</p>
+    </header>
+    <form id="login-form" novalidate>
+      <label for="login-username">Username</label>
+      <input id="login-username" name="username" type="text" autocomplete="username" placeholder="Masukkan username" required>
+      <label for="login-password">Password</label>
+      <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required>
+      <p id="login-error" role="alert" hidden></p>
+      <button id="login-submit" type="submit">Login</button>
+      <p id="login-loading" role="status" hidden>Memproses login...</p>
+    </form>
+  </section>
+</main>
+
+<!-- ==================================================
+     # /shared
+     ================================================== -->
+<div id="app-shell" data-view="app" hidden>
+
+  <header id="app-header">
+    <h1>Web Tabungan</h1>
+    <button id="nav-toggle" type="button" aria-controls="app-nav" aria-expanded="false">Menu</button>
+    <button id="btn-logout" type="button">Keluar</button>
+  </header>
+
+  <nav id="app-nav" aria-label="Navigasi utama">
+    <ul>
+      <li><a href="#dashboard" data-nav="dashboard">Dashboard</a></li>
+      <li><a href="#finance" data-nav="finance">Finance</a></li>
+      <li><a href="#wishlist" data-nav="wishlist">Wishlist</a></li>
+      <li><a href="#statistics" data-nav="statistics">Statistics</a></li>
+      <li><a href="#settings" data-nav="settings">Settings</a></li>
+    </ul>
+  </nav>
+
+  <div id="app-content">
+
+<!-- ==================================================
+     # /dashboard
+     ================================================== -->
+    <section id="view-dashboard" data-view="dashboard" aria-labelledby="dashboard-title" hidden>
+      <h2 id="dashboard-title">Dashboard</h2>
+      <p class="state-loading" data-state="loading" hidden>Memuat dashboard...</p>
+      <div class="state-error" data-state="error" role="alert" hidden><p data-slot="message"></p><button type="button" data-action="retry">Coba lagi</button></div>
+
+      <header id="dash-greeting">
+        <p id="dash-greeting-text"></p>
+        <p id="dash-username"></p>
+        <p id="dash-user-info"></p>
+        <p id="dash-level"></p>
+        <p id="dash-streak"></p>
+      </header>
+
+      <section id="dash-quote" aria-label="Quote">
+        <blockquote><p data-slot="quote"></p><footer data-slot="author"></footer></blockquote>
+        <p class="state-empty" data-state="empty" hidden>Belum ada quote.</p>
+      </section>
+
+      <section id="dash-summary" aria-labelledby="dash-summary-title">
+        <h3 id="dash-summary-title">Ringkasan Keuangan</h3>
+        <dl>
+          <div><dt>Total Keuangan</dt><dd id="sum-total" data-limitation="Backend belum menyediakan saldo total"></dd></div>
+          <div><dt>Pemasukan Hari Ini</dt><dd id="sum-income-today"></dd></div>
+          <div><dt>Pengeluaran Hari Ini</dt><dd id="sum-expense-today"></dd></div>
+          <div><dt>Pemasukan Bulan Ini</dt><dd id="sum-income-month"></dd></div>
+          <div><dt>Pengeluaran Bulan Ini</dt><dd id="sum-expense-month"></dd></div>
+        </dl>
+      </section>
+
+      <section id="dash-wishlist" aria-labelledby="dash-wishlist-title">
+        <h3 id="dash-wishlist-title">Wishlist Utama</h3>
+        <div id="dash-wishlist-data" hidden>
+          <p data-slot="nama"></p>
+          <p data-slot="target-nominal"></p>
+          <progress id="dash-wishlist-progress" max="100" value="0"></progress>
+          <p data-slot="persen"></p>
+          <p data-slot="status"></p>
+          <p data-slot="prediksi"></p>
+        </div>
+        <p class="state-empty" data-state="empty">Belum ada wishlist aktif.</p>
+      </section>
+
+      <section id="dash-quick-add" aria-labelledby="dash-quick-title">
+        <h3 id="dash-quick-title">Tambah Transaksi Cepat</h3>
+        <form id="quick-add-form" novalidate>
+          <label for="quick-tipe">Tipe</label>
+          <select id="quick-tipe" name="tipe" required>
+            <option value="">Pilih tipe</option>
+            <option value="INCOME">Pemasukan</option>
+            <option value="EXPENSE">Pengeluaran</option>
+            <option value="SAVING">Saving</option>
+            <option value="WITHDRAWAL">Withdrawal</option>
+          </select>
+          <label for="quick-nominal">Nominal</label>
+          <input id="quick-nominal" name="nominal" type="number" min="1" inputmode="numeric" placeholder="Masukkan nominal" required>
+          <label for="quick-kategori">Kategori</label>
+          <input id="quick-kategori" name="kategori" type="text" placeholder="Masukkan kategori" required>
+          <label for="quick-tanggal">Tanggal</label>
+          <input id="quick-tanggal" name="tanggal" type="date" required>
+          <label for="quick-target">Target</label>
+          <select id="quick-target" name="target_id"><option value="">Pilih target</option></select>
+          <label for="quick-keterangan">Keterangan</label>
+          <input id="quick-keterangan" name="keterangan" type="text" placeholder="Masukkan deskripsi">
+          <p id="quick-error" role="alert" hidden></p>
+          <button type="submit">Simpan transaksi</button>
+        </form>
+      </section>
+
+      <section id="dash-chart" aria-labelledby="dash-chart-title">
+        <h3 id="dash-chart-title">Grafik</h3>
+        <fieldset><legend>Rentang</legend>
+          <label><input type="radio" name="dash-range" value="7" checked> 7 hari</label>
+          <label><input type="radio" name="dash-range" value="30"> 30 hari</label>
+        </fieldset>
+        <canvas id="dash-chart-canvas" aria-label="Grafik pemasukan, pengeluaran, dan saving" role="img" hidden></canvas>
+        <p class="state-empty" data-state="empty">Belum ada data statistik.</p>
+      </section>
+
+      <section id="dash-calendar" aria-labelledby="dash-calendar-title">
+        <h3 id="dash-calendar-title">Kalender Aktivitas</h3>
+        <div id="dash-calendar-nav"><button type="button" data-action="cal-prev">Sebelumnya</button><span id="dash-calendar-label"></span><button type="button" data-action="cal-next">Berikutnya</button></div>
+        <div id="dash-calendar-grid" role="grid" aria-label="Kalender aktivitas menabung"></div>
+        <p class="state-empty" data-state="empty">Belum ada aktivitas.</p>
+      </section>
+
+      <section id="dash-recent" aria-labelledby="dash-recent-title">
+        <h3 id="dash-recent-title">Recent Activity</h3>
+        <ul id="dash-recent-list"></ul>
+        <p class="state-empty" data-state="empty">Belum ada transaksi.</p>
+      </section>
+
+      <section id="dash-achievements" aria-labelledby="dash-ach-title">
+        <h3 id="dash-ach-title">Achievement</h3>
+        <p id="dash-ach-count"></p>
+        <ul id="dash-ach-list"></ul>
+        <p class="state-empty" data-state="empty">Belum ada achievement yang terbuka.</p>
+      </section>
+    </section>
+
+<!-- ==================================================
+     # /finance
+     ================================================== -->
+    <section id="view-finance" data-view="finance" aria-labelledby="finance-title" hidden>
+      <h2 id="finance-title">Finance</h2>
+      <p class="state-loading" data-state="loading" hidden>Memuat transaksi...</p>
+      <div class="state-error" data-state="error" role="alert" hidden><p data-slot="message"></p><button type="button" data-action="retry">Coba lagi</button></div>
+
+      <section id="fin-summary" aria-labelledby="fin-summary-title">
+        <h3 id="fin-summary-title">Ringkasan</h3>
+        <dl>
+          <div><dt>Total Pemasukan</dt><dd id="fin-sum-income"></dd></div>
+          <div><dt>Total Pengeluaran</dt><dd id="fin-sum-expense"></dd></div>
+          <div><dt>Total Saving</dt><dd id="fin-sum-saving"></dd></div>
+          <div><dt>Total Withdrawal</dt><dd id="fin-sum-withdrawal"></dd></div>
+          <div><dt>Saldo Bersih</dt><dd id="fin-sum-net"></dd></div>
+        </dl>
+      </section>
+
+      <section id="fin-toolbar" aria-label="Pencarian dan filter">
+        <label for="fin-search">Cari transaksi</label>
+        <input id="fin-search" type="search" placeholder="Cari kategori atau keterangan">
+        <label for="fin-filter-tipe">Tipe</label>
+        <select id="fin-filter-tipe">
+          <option value="">Semua tipe</option>
+          <option value="INCOME">Pemasukan</option>
+          <option value="EXPENSE">Pengeluaran</option>
+          <option value="SAVING">Saving</option>
+          <option value="WITHDRAWAL">Withdrawal</option>
+        </select>
+        <label for="fin-filter-from">Dari tanggal</label>
+        <input id="fin-filter-from" type="date">
+        <label for="fin-filter-to">Sampai tanggal</label>
+        <input id="fin-filter-to" type="date">
+        <button id="fin-filter-reset" type="button">Reset filter</button>
+        <button id="fin-btn-add" type="button">Tambah transaksi</button>
+        <button id="fin-btn-transfer" type="button" disabled data-limitation="Backend tidak memiliki action transfer">Transfer</button>
+        <button id="fin-btn-export" type="button" disabled data-limitation="Backend tidak memiliki action export PDF">Export PDF</button>
+      </section>
+
+      <section id="fin-list" aria-labelledby="fin-list-title">
+        <h3 id="fin-list-title">Transaksi</h3>
+        <table>
+          <thead>
+            <tr><th scope="col">Tanggal</th><th scope="col">Tipe</th><th scope="col">Kategori</th><th scope="col">Nominal</th><th scope="col">Deskripsi</th><th scope="col">Target</th><th scope="col">Aksi</th></tr>
+          </thead>
+          <tbody id="fin-tbody"></tbody>
+        </table>
+        <p class="state-empty" data-state="empty">Belum ada transaksi.</p>
+        <nav id="fin-pagination" aria-label="Halaman transaksi">
+          <button type="button" data-action="page-prev">Sebelumnya</button>
+          <span id="fin-page-info"></span>
+          <button type="button" data-action="page-next">Berikutnya</button>
+        </nav>
+      </section>
+
+      <dialog id="fin-modal-form" aria-labelledby="fin-form-title">
+        <form id="fin-form" novalidate>
+          <h3 id="fin-form-title">Tambah transaksi</h3>
+          <input type="hidden" id="fin-form-id" name="id">
+          <label for="fin-form-tipe">Tipe</label>
+          <select id="fin-form-tipe" name="tipe" required>
+            <option value="">Pilih tipe</option>
+            <option value="INCOME">Pemasukan</option>
+            <option value="EXPENSE">Pengeluaran</option>
+            <option value="SAVING">Saving</option>
+            <option value="WITHDRAWAL">Withdrawal</option>
+          </select>
+          <label for="fin-form-tanggal">Tanggal</label>
+          <input id="fin-form-tanggal" name="tanggal" type="date" required>
+          <label for="fin-form-kategori">Kategori</label>
+          <input id="fin-form-kategori" name="kategori" type="text" placeholder="Masukkan kategori" required>
+          <label for="fin-form-nominal">Nominal</label>
+          <input id="fin-form-nominal" name="nominal" type="number" min="1" inputmode="numeric" placeholder="Masukkan nominal" required>
+          <label for="fin-form-target">Target (wajib untuk Saving dan Withdrawal)</label>
+          <select id="fin-form-target" name="target_id"><option value="">Pilih target</option></select>
+          <label for="fin-form-keterangan">Keterangan</label>
+          <input id="fin-form-keterangan" name="keterangan" type="text" placeholder="Masukkan deskripsi">
+          <p id="fin-form-error" role="alert" hidden></p>
+          <button type="button" data-action="close-modal">Batal</button>
+          <button type="submit" id="fin-form-submit">Simpan</button>
+        </form>
+      </dialog>
+    </section>
+
+<!-- ==================================================
+     # /wishlist
+     ================================================== -->
+    <section id="view-wishlist" data-view="wishlist" aria-labelledby="wishlist-title" hidden>
+      <h2 id="wishlist-title">Wishlist</h2>
+      <p class="state-loading" data-state="loading" hidden>Memuat wishlist...</p>
+      <div class="state-error" data-state="error" role="alert" hidden><p data-slot="message"></p><button type="button" data-action="retry">Coba lagi</button></div>
+
+      <section id="wl-main" aria-labelledby="wl-main-title">
+        <h3 id="wl-main-title">Wishlist Utama</h3>
+        <div id="wl-main-data" hidden>
+          <p data-slot="nama"></p>
+          <p data-slot="target-nominal"></p>
+          <p data-slot="total-saving"></p>
+          <p data-slot="kurang"></p>
+          <progress id="wl-progress" max="100" value="0"></progress>
+          <p data-slot="persen"></p>
+          <p data-slot="status"></p>
+          <p data-slot="tanggal-mulai"></p>
+          <p data-slot="prediksi"></p>
+          <ul id="wl-milestones" aria-label="Milestone"></ul>
+          <button type="button" id="wl-btn-edit">Ubah target</button>
+          <button type="button" id="wl-btn-complete">Tandai tercapai</button>
+        </div>
+        <p class="state-empty" data-state="empty">Belum ada wishlist aktif.</p>
+      </section>
+
+      <section id="wl-all" aria-labelledby="wl-all-title">
+        <h3 id="wl-all-title">Semua Wishlist</h3>
+        <p data-limitation="Backend hanya mendukung satu target aktif dan tidak memiliki action daftar semua target" hidden></p>
+        <ul id="wl-all-list"></ul>
+        <p class="state-empty" data-state="empty">Belum ada wishlist.</p>
+      </section>
+
+      <section id="wl-add" aria-labelledby="wl-add-title">
+        <h3 id="wl-add-title">Tambah Wishlist</h3>
+        <form id="wl-form" novalidate>
+          <label for="wl-nama">Nama target</label>
+          <input id="wl-nama" name="nama_target" type="text" placeholder="Masukkan nama wishlist" required>
+          <label for="wl-nominal">Nominal target</label>
+          <input id="wl-nominal" name="target_nominal" type="number" min="1" inputmode="numeric" placeholder="Masukkan nominal" required>
+          <p id="wl-form-error" role="alert" hidden></p>
+          <button type="submit" id="wl-form-submit">Simpan wishlist</button>
+        </form>
+      </section>
+
+      <section id="wl-done" aria-labelledby="wl-done-title">
+        <h3 id="wl-done-title">Wishlist Tercapai</h3>
+        <ul id="wl-done-list"></ul>
+        <p class="state-empty" data-state="empty">Belum ada wishlist yang tercapai.</p>
+      </section>
+    </section>
+
+<!-- ==================================================
+     # /statistics
+     ================================================== -->
+    <section id="view-statistics" data-view="statistics" aria-labelledby="stat-title" hidden>
+      <h2 id="stat-title">Statistics</h2>
+      <p class="state-loading" data-state="loading" hidden>Memuat statistik...</p>
+      <div class="state-error" data-state="error" role="alert" hidden><p data-slot="message"></p><button type="button" data-action="retry">Coba lagi</button></div>
+
+      <section id="stat-period" aria-label="Filter periode">
+        <label for="stat-bulan">Bulan</label>
+        <select id="stat-bulan">
+          <option value="">Bulan ini</option>
+          <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+          <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+          <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+          <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+        </select>
+        <label for="stat-tahun">Tahun</label>
+        <input id="stat-tahun" type="number" min="2000" max="2100" placeholder="Masukkan tahun">
+        <label for="stat-months">Rentang trend</label>
+        <select id="stat-months">
+          <option value="3">3 bulan</option><option value="6" selected>6 bulan</option><option value="12">12 bulan</option>
+        </select>
+        <button type="button" id="stat-apply">Terapkan</button>
+      </section>
+
+      <section id="stat-summary" aria-labelledby="stat-summary-title">
+        <h3 id="stat-summary-title">Ringkasan</h3>
+        <dl>
+          <div><dt>Total Income</dt><dd id="stat-income"></dd></div>
+          <div><dt>Total Expense</dt><dd id="stat-expense"></dd></div>
+          <div><dt>Total Saving</dt><dd id="stat-saving"></dd></div>
+          <div><dt>Total Withdrawal</dt><dd id="stat-withdrawal"></dd></div>
+          <div><dt>Net Saving</dt><dd id="stat-net-saving"></dd></div>
+          <div><dt>Saldo Bersih</dt><dd id="stat-saldo"></dd></div>
+          <div><dt>Jumlah Transaksi</dt><dd id="stat-count"></dd></div>
+        </dl>
+        <p class="state-empty" data-state="empty">Belum ada data statistik.</p>
+      </section>
+
+      <section id="stat-chart" aria-labelledby="stat-chart-title">
+        <h3 id="stat-chart-title">Grafik Harian</h3>
+        <canvas id="stat-chart-canvas" aria-label="Grafik harian bulan terpilih" role="img" hidden></canvas>
+        <p class="state-empty" data-state="empty">Belum ada data statistik.</p>
+      </section>
+
+      <section id="stat-income-section" aria-labelledby="stat-income-title">
+        <h3 id="stat-income-title">Statistik Income</h3>
+        <ul id="stat-income-list"></ul>
+        <p class="state-empty" data-state="empty">Belum ada pemasukan.</p>
+      </section>
+
+      <section id="stat-expense-section" aria-labelledby="stat-expense-title">
+        <h3 id="stat-expense-title">Statistik Expense</h3>
+        <ul id="stat-expense-list"></ul>
+        <p class="state-empty" data-state="empty">Belum ada pengeluaran.</p>
+      </section>
+
+      <section id="stat-saving-section" aria-labelledby="stat-saving-title">
+        <h3 id="stat-saving-title">Statistik Saving</h3>
+        <ul id="stat-saving-list"></ul>
+        <p class="state-empty" data-state="empty">Belum ada tabungan.</p>
+      </section>
+
+      <section id="stat-category" aria-labelledby="stat-category-title">
+        <h3 id="stat-category-title">Berdasarkan Kategori</h3>
+        <table>
+          <thead><tr><th scope="col">Tipe</th><th scope="col">Kategori</th><th scope="col">Total</th><th scope="col">Persentase</th><th scope="col">Jumlah Tx</th></tr></thead>
+          <tbody id="stat-category-tbody"></tbody>
+        </table>
+        <p class="state-empty" data-state="empty">Belum ada data kategori.</p>
+      </section>
+
+      <section id="stat-trend" aria-labelledby="stat-trend-title">
+        <h3 id="stat-trend-title">Trend</h3>
+        <canvas id="stat-trend-canvas" aria-label="Trend bulanan" role="img" hidden></canvas>
+        <table>
+          <thead><tr><th scope="col">Periode</th><th scope="col">Income</th><th scope="col">Expense</th><th scope="col">Saving</th><th scope="col">Withdrawal</th><th scope="col">Net Saving</th></tr></thead>
+          <tbody id="stat-trend-tbody"></tbody>
+        </table>
+        <p class="state-empty" data-state="empty">Belum ada data trend.</p>
+      </section>
+
+      <section id="stat-achievements" aria-labelledby="stat-ach-title">
+        <h3 id="stat-ach-title">Achievement</h3>
+        <dl id="stat-ach-summary">
+          <div><dt>Terbuka</dt><dd data-slot="opened"></dd></div>
+          <div><dt>Terkunci</dt><dd data-slot="locked"></dd></div>
+          <div><dt>Total XP</dt><dd data-slot="xp"></dd></div>
+        </dl>
+        <label for="stat-ach-filter">Filter status</label>
+        <select id="stat-ach-filter">
+          <option value="all">Semua</option>
+          <option value="unlocked">Terbuka</option>
+          <option value="locked">Terkunci</option>
+        </select>
+        <ul id="stat-ach-list"></ul>
+        <p class="state-empty" data-state="empty">Belum ada achievement.</p>
+      </section>
+
+      <section id="stat-hof" aria-labelledby="stat-hof-title">
+        <h3 id="stat-hof-title">Hall of Fame</h3>
+        <ul id="stat-hof-list"></ul>
+        <p class="state-empty" data-state="empty">Belum ada Hall of Fame.</p>
+      </section>
+    </section>
+
+<!-- ==================================================
+     # /settings
+     ================================================== -->
+    <section id="view-settings" data-view="settings" aria-labelledby="settings-title" hidden>
+      <h2 id="settings-title">Settings</h2>
+
+      <section id="set-account" aria-labelledby="set-account-title">
+        <h3 id="set-account-title">Account</h3>
+        <dl><div><dt>Username</dt><dd id="set-username"></dd></div></dl>
+        <p data-limitation="Backend tidak memiliki action ubah username" hidden></p>
+      </section>
+
+      <section id="set-password" aria-labelledby="set-password-title">
+        <h3 id="set-password-title">Ganti Password</h3>
+        <form id="password-form" novalidate>
+          <label for="pw-old">Password lama</label>
+          <input id="pw-old" type="password" autocomplete="current-password" placeholder="Masukkan password lama" required>
+          <label for="pw-new">Password baru</label>
+          <input id="pw-new" type="password" autocomplete="new-password" placeholder="Masukkan password baru" required>
+          <label for="pw-confirm">Konfirmasi password baru</label>
+          <input id="pw-confirm" type="password" autocomplete="new-password" placeholder="Ulangi password baru" required>
+          <p id="pw-error" role="alert" hidden></p>
+          <button type="submit">Ganti password</button>
+        </form>
+      </section>
+
+      <section id="set-backup" aria-labelledby="set-backup-title">
+        <h3 id="set-backup-title">Backup</h3>
+        <p id="set-backup-info"></p>
+        <button type="button" id="btn-backup">Backup data</button>
+      </section>
+
+      <section id="set-restore" aria-labelledby="set-restore-title">
+        <h3 id="set-restore-title">Restore</h3>
+        <p>Restore menimpa data yang ada dan tidak bisa dibatalkan.</p>
+        <label for="restore-file">File backup (.json)</label>
+        <input id="restore-file" type="file" accept="application/json,.json">
+        <button type="button" id="btn-restore" disabled>Restore data</button>
+      </section>
+
+      <section id="set-reset" aria-labelledby="set-reset-title">
+        <h3 id="set-reset-title">Reset Data</h3>
+        <button type="button" id="btn-reset" disabled data-limitation="Backend tidak memiliki action reset data">Reset data</button>
+      </section>
+
+      <section id="set-about" aria-labelledby="set-about-title">
+        <h3 id="set-about-title">About</h3>
+        <p>Web Tabungan: aplikasi personal finance untuk mencatat keuangan dan mengelola target tabungan.</p>
+        <dl><div><dt>Versi</dt><dd id="set-version"></dd></div></dl>
+      </section>
+    </section>
+
+  </div><!-- /#app-content -->
+
+  <!-- Shared: notification -->
+  <div id="toast-region" role="status" aria-live="polite"></div>
+
+  <!-- Shared: konfirmasi -->
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <h3 id="confirm-title"></h3>
+    <p id="confirm-message"></p>
+    <button type="button" id="confirm-cancel">Batal</button>
+    <button type="button" id="confirm-ok">Lanjutkan</button>
+  </dialog>
+
+  <!-- Shared: achievement unlock -->
+  <dialog id="achievement-dialog" aria-labelledby="ach-dialog-title">
+    <h3 id="ach-dialog-title">Achievement terbuka</h3>
+    <ul id="ach-dialog-list"></ul>
+    <button type="button" id="ach-dialog-close">Tutup</button>
+  </dialog>
+
+  <!-- Shared: overlay loading -->
+  <div id="global-loading" role="status" hidden>Memuat...</div>
+</div>
+
+<!-- Shared: template reusable state -->
+<template id="tpl-empty"><p class="state-empty"></p></template>
+<template id="tpl-error"><div class="state-error" role="alert"><p data-slot="message"></p><button type="button" data-action="retry">Coba lagi</button></div></template>
+<template id="tpl-loading"><p class="state-loading" role="status">Memuat...</p></template>
+
+<!-- # /api: tidak ada markup. Logic komunikasi ditambahkan di layer JavaScript. -->
+
+</body>
+</html>
